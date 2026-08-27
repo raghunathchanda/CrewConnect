@@ -45,19 +45,125 @@ def employee_list(request):
     employees = Employee.objects.select_related(
         "department",
         "designation"
-    ).all()
+    ).filter(
+        status=True
+    )
 
-    return render(request,"employee_list.html",
-        {"employees": employees})
+    return render(
+        request,
+        "employee_list.html",
+        {
+            "employees": employees
+        }
+    )
 
 
-def employee_create():
-    return None
+from django.shortcuts import render, redirect, get_object_or_404
+
+from .models import Employee, Department, Designation
 
 
-def employee_update():
-    return None
+def employee_create(request):
+
+    departments = Department.objects.all()
+    designations = Designation.objects.all()
+
+    if request.method == "POST":
+
+        employee_id = request.POST.get("employee_id")
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+
+        department_id = request.POST.get("department")
+        designation_id = request.POST.get("designation")
+
+        joining_date = request.POST.get("joining_date")
+        employment_type = request.POST.get("employment_type")
+        salary = request.POST.get("salary")
+        address = request.POST.get("address")
+
+        status = request.POST.get("status") == "on"
+
+        Employee.objects.create(
+            employee_id=employee_id,
+            name=name,
+            email=email,
+            phone=phone,
+            department_id=department_id,
+            designation_id=designation_id,
+            joining_date=joining_date,
+            employment_type=employment_type,
+            salary=salary,
+            address=address,
+            status=status
+        )
+
+        return redirect("employee_list")
+
+    return render(
+        request,
+        "employee_add_update.html",
+        {
+            "departments": departments,
+            "designations": designations,
+            "employment_types": Employee.EMPLOYMENT_TYPES,
+            "is_update": False,
+        }
+    )
 
 
-def employee_delete():
-    return None
+def employee_update(request, id):
+
+    employee = get_object_or_404(
+        Employee,
+        id=id
+    )
+
+    departments = Department.objects.all()
+    designations = Designation.objects.all()
+
+    if request.method == "POST":
+
+        employee.employee_id = request.POST.get("employee_id")
+        employee.name = request.POST.get("name")
+        employee.email = request.POST.get("email")
+        employee.phone = request.POST.get("phone")
+
+        employee.department_id = request.POST.get("department")
+        employee.designation_id = request.POST.get("designation")
+
+        employee.joining_date = request.POST.get("joining_date")
+        employee.employment_type = request.POST.get("employment_type")
+        employee.salary = request.POST.get("salary")
+        employee.address = request.POST.get("address")
+
+        employee.status = request.POST.get("status") == "on"
+
+        employee.save()
+
+        return redirect(
+            "employee_list"
+        )
+
+    return render(
+        request,
+        "employee_add_update.html",
+        {
+            "employee": employee,
+            "departments": departments,
+            "designations": designations,
+            "employment_types": Employee.EMPLOYMENT_TYPES,
+            "is_update": True,
+        }
+    )
+
+
+def employee_delete(request, id):
+    employee = get_object_or_404(
+        Employee,
+        id=id
+    )
+    employee.status = not employee.status
+    employee.save()
+    return redirect("employee_list")
