@@ -6,6 +6,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import never_cache
 
+from hr.models import Employee
+
 
 def login_view(request):
 
@@ -35,5 +37,27 @@ def logout_view(request):
     return redirect("login")
 
 
-def viewemployees(request):
-    return render(request, "view_employees.html")
+# def viewemployees(request):
+#     return render(request, "view_employees.html")
+
+def employee_list(request):
+
+    employees = Employee.objects.select_related(
+        "department",
+        "designation"
+    ).all()
+
+    return render(request,"employee_list.html",
+        {"employees": employees})
+
+
+def employee_create():
+    return None
+
+
+def employee_update():
+    return None
+
+
+def employee_delete():
+    return None
