@@ -1,4 +1,6 @@
 from django.urls import path
+
+from . import views
 from .views import (login_view, dashboard, logout_view,
                     employee_list,employee_create,employee_update,employee_delete)
 
@@ -12,4 +14,5 @@ urlpatterns = [
     path("employees/add/", employee_create, name="employee_create"),
     path("employees/<int:id>/edit/", employee_update, name="employee_update"),
     path("employees/<int:id>/delete/", employee_delete, name="employee_delete"),
-]
+    path("leave-approval/",views.leave_approval,name="leave_approval"),
+    path("leave/<int:id>/action/",views.leave_action,name="leave_action"),]

@@ -35,7 +35,15 @@
 
 <body>
 
-    {% include 'sidebar.html' %}
+{% if is_employee %}
+
+    {% include "employee_sidebar.html" %}
+
+{% else %}
+
+    {% include "sidebar.html" %}
+
+{% endif %}
 
     <div class="main-content">
 

@@ -6,6 +6,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
 
+from hr.models import Leave
+
 User = get_user_model()
 
 
@@ -50,6 +52,7 @@ from django.shortcuts import render
 
 
 @login_required
+@login_required
 def employee_dashboard(request):
 
     employee = request.user.employee
@@ -58,6 +61,77 @@ def employee_dashboard(request):
         request,
         "employee_dashboard.html",
         {
-            "employee": employee
+            "employee": employee,
+            "is_employee": True,
+        }
+    )
+
+
+@login_required
+def employee_profile(request):
+
+    employee = request.user.employee
+
+    return render(
+        request,
+        "profile.html",
+        {
+            "employee": employee,
+            "is_employee": True,
+        }
+    )
+
+
+@login_required
+def apply_leave(request):
+
+    employee = request.user.employee
+
+    if request.method == "POST":
+
+        leave_type = request.POST.get("leave_type")
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+        reason = request.POST.get("reason")
+
+        Leave.objects.create(
+            employee=employee,
+            leave_type=leave_type,
+            start_date=start_date,
+            end_date=end_date,
+            reason=reason
+        )
+
+        messages.success(
+            request,
+            "Leave application submitted successfully."
+        )
+
+        return redirect("my_leaves")
+
+    return render(
+        request,
+        "apply_leave.html",
+        {
+            "leave_types": Leave.LEAVE_TYPES,
+            "is_employee": True,
+        }
+    )
+
+@login_required
+def my_leaves(request):
+
+    employee = request.user.employee
+
+    leaves = Leave.objects.filter(
+        employee=employee
+    ).order_by("-applied_date")
+
+    return render(
+        request,
+        "my_leaves.html",
+        {
+            "leaves": leaves,
+            "is_employee": True,
         }
     )

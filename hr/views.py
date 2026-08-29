@@ -15,7 +15,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.cache import never_cache
 
 
-from hr.models import Employee
+from hr.models import Employee, Leave
 
 
 def login_view(request):
@@ -28,7 +28,9 @@ def login_view(request):
         if user is not None:
             login(request, user)
             if Employee.objects.filter(user=user).exists():
+                print("enter----------1")
                 return redirect("employee_dashboard")
+            print("enter----------2")
             return redirect("dashboard")
         return render(request,"login.html",{"error": "Invalid username or password"})
     return render(request, "login.html")
@@ -281,3 +283,52 @@ def employee_delete(request, id):
     employee.status = not employee.status
     employee.save()
     return redirect("employee_list")
+
+
+@login_required
+def leave_approval(request):
+
+    # Check whether logged-in user is an employee
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    leaves = Leave.objects.select_related(
+        "employee",
+        "employee__department",
+        "employee__designation"
+    ).order_by("-applied_date")
+
+    return render(
+        request,
+        "leave_approval.html",
+        {
+            "leaves": leaves,
+            "is_employee": False,
+        }
+    )
+
+
+@login_required
+def leave_action(request, id):
+
+    # Employee cannot approve/reject
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    if request.method == "POST":
+
+        leave = Leave.objects.get(id=id)
+
+        action = request.POST.get("action")
+
+        if action == "approve":
+
+            leave.status = "Approved"
+            leave.save()
+
+        elif action == "reject":
+
+            leave.status = "Rejected"
+            leave.save()
+
+    return redirect("leave_approval")

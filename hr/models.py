@@ -43,3 +43,67 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.employee_id} - {self.name}"
+
+
+class Leave(models.Model):
+
+    LEAVE_TYPES = [
+        ("EL", "Earned Leave"),
+        ("SL", "Sick Leave"),
+    ]
+
+    STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Approved", "Approved"),
+        ("Rejected", "Rejected"),
+    ]
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="leaves"
+    )
+
+    leave_type = models.CharField(
+        max_length=10,
+        choices=LEAVE_TYPES
+    )
+
+    start_date = models.DateField()
+
+    end_date = models.DateField()
+
+    reason = models.TextField()
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="Pending"
+    )
+
+    applied_date = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.leave_type}"
+
+
+class LeaveBalance(models.Model):
+
+    employee = models.OneToOneField(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="leave_balance"
+    )
+
+    earned_leave = models.PositiveIntegerField(
+        default=12
+    )
+
+    sick_leave = models.PositiveIntegerField(
+        default=8
+    )
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - Leave Balance"
