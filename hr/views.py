@@ -1,8 +1,11 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Sum, Count, ProtectedError
 from django.shortcuts import render
 
 # Create your views here.
@@ -15,7 +18,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.cache import never_cache
 
 
-from hr.models import Employee, Leave
+from hr.models import Employee, Leave, Payslip
 
 
 def login_view(request):
@@ -332,3 +335,476 @@ def leave_action(request, id):
             leave.save()
 
     return redirect("leave_approval")
+
+@login_required
+def payroll(request):
+
+    # Employee should not access HR payroll
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    employees = Employee.objects.filter(status=True)
+
+    payslips = Payslip.objects.select_related(
+        "employee"
+    ).order_by("-year", "-month")
+
+    return render(
+        request,
+        "payroll.html",
+        {
+            "employees": employees,
+            "payslips": payslips,
+        }
+    )
+
+@login_required
+def generate_payslip(request):
+
+    # Employee should not access HR payroll
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    if request.method == "POST":
+
+        employee_id = request.POST.get("employee")
+        month = request.POST.get("month")
+        year = request.POST.get("year")
+        allowances = request.POST.get("allowances") or 0
+        deductions = request.POST.get("deductions") or 0
+
+        employee = Employee.objects.get(
+            id=employee_id
+        )
+
+        basic_salary = employee.salary
+
+        allowances = Decimal(allowances)
+        deductions = Decimal(deductions)
+
+        net_salary = (
+            basic_salary
+            + allowances
+            - deductions
+        )
+
+        Payslip.objects.create(
+            employee=employee,
+            month=month,
+            year=year,
+            basic_salary=basic_salary,
+            allowances=allowances,
+            deductions=deductions,
+            net_salary=net_salary,
+        )
+
+        return redirect("payroll")
+
+    return redirect("payroll")
+
+
+# @login_required
+# def reports(request):
+#
+#     # Employee should not access HR reports
+#     if Employee.objects.filter(user=request.user).exists():
+#         return redirect("employee_dashboard")
+#
+#     # Employee counts
+#     total_employees = Employee.objects.count()
+#
+#     active_employees = Employee.objects.filter(
+#         status=True
+#     ).count()
+#
+#     inactive_employees = Employee.objects.filter(
+#         status=False
+#     ).count()
+#
+#
+#     # Leave counts
+#     total_leaves = Leave.objects.count()
+#
+#     pending_leaves = Leave.objects.filter(
+#         status="Pending"
+#     ).count()
+#
+#     approved_leaves = Leave.objects.filter(
+#         status="Approved"
+#     ).count()
+#
+#     rejected_leaves = Leave.objects.filter(
+#         status="Rejected"
+#     ).count()
+#
+#
+#     # Payroll
+#     total_payslips = Payslip.objects.count()
+#
+#     total_salary = Payslip.objects.aggregate(
+#         total=Sum("net_salary")
+#     )["total"] or 0
+#
+#
+#     context = {
+#         "total_employees": total_employees,
+#         "active_employees": active_employees,
+#         "inactive_employees": inactive_employees,
+#
+#         "total_leaves": total_leaves,
+#         "pending_leaves": pending_leaves,
+#         "approved_leaves": approved_leaves,
+#         "rejected_leaves": rejected_leaves,
+#
+#         "total_payslips": total_payslips,
+#         "total_salary": total_salary,
+#     }
+#
+#     return render(
+#         request,
+#         "reports.html",
+#         context
+#     )
+
+@login_required
+def reports(request):
+
+    # Employee should not access HR reports
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    # Default month/year
+    month = request.GET.get("month", "8")
+    year = request.GET.get("year", "2026")
+
+    month = int(month)
+    year = int(year)
+
+    # -----------------------------
+    # Employee Summary
+    # -----------------------------
+
+    total_employees = Employee.objects.count()
+
+    active_employees = Employee.objects.filter(
+        status=True
+    ).count()
+
+    inactive_employees = Employee.objects.filter(
+        status=False
+    ).count()
+
+
+    # -----------------------------
+    # Leave Summary
+    # -----------------------------
+
+    # Leaves applied during selected month/year
+    leaves = Leave.objects.filter(
+        start_date__year=year,
+        start_date__month=month
+    )
+
+    total_leaves = leaves.count()
+
+    pending_leaves = leaves.filter(
+        status="Pending"
+    ).count()
+
+    approved_leaves = leaves.filter(
+        status="Approved"
+    ).count()
+
+    rejected_leaves = leaves.filter(
+        status="Rejected"
+    ).count()
+
+
+    # -----------------------------
+    # Payroll Summary
+    # -----------------------------
+
+    payslips = Payslip.objects.filter(
+        month=month,
+        year=year
+    )
+
+    total_payslips = payslips.count()
+
+    payroll_summary = payslips.aggregate(
+        total_basic_salary=Sum("basic_salary"),
+        total_allowances=Sum("allowances"),
+        total_deductions=Sum("deductions"),
+        total_net_salary=Sum("net_salary"),
+    )
+
+    total_basic_salary = (
+        payroll_summary["total_basic_salary"] or 0
+    )
+
+    total_allowances = (
+        payroll_summary["total_allowances"] or 0
+    )
+
+    total_deductions = (
+        payroll_summary["total_deductions"] or 0
+    )
+
+    total_net_salary = (
+        payroll_summary["total_net_salary"] or 0
+    )
+
+
+    # -----------------------------
+    # Employee-wise Leave Details
+    # -----------------------------
+
+    leave_details = leaves.select_related(
+        "employee"
+    ).order_by("-start_date")
+
+
+    # -----------------------------
+    # Employee-wise Payroll Details
+    # -----------------------------
+
+    payroll_details = payslips.select_related(
+        "employee"
+    ).order_by("employee__name")
+
+
+    context = {
+
+        # Selected period
+        "selected_month": month,
+        "selected_year": year,
+
+        # Employees
+        "total_employees": total_employees,
+        "active_employees": active_employees,
+        "inactive_employees": inactive_employees,
+
+        # Leaves
+        "total_leaves": total_leaves,
+        "pending_leaves": pending_leaves,
+        "approved_leaves": approved_leaves,
+        "rejected_leaves": rejected_leaves,
+        "leave_details": leave_details,
+
+        # Payroll
+        "total_payslips": total_payslips,
+        "total_basic_salary": total_basic_salary,
+        "total_allowances": total_allowances,
+        "total_deductions": total_deductions,
+        "total_net_salary": total_net_salary,
+        "payroll_details": payroll_details,
+    }
+
+    return render(
+        request,
+        "reports.html",
+        context
+    )
+
+
+@login_required
+def department_list(request):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    departments = Department.objects.all().order_by("name")
+
+    return render(
+        request,
+        "department_list.html",
+        {
+            "departments": departments
+        }
+    )
+
+@login_required
+def department_create(request):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+
+        if name:
+
+            Department.objects.create(
+                name=name
+            )
+
+            return redirect("department_list")
+
+    return render(
+        request,
+        "department_form.html"
+    )
+
+@login_required
+def department_update(request, id):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    department = Department.objects.get(id=id)
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+
+        if name:
+
+            department.name = name
+            department.save()
+
+            return redirect("department_list")
+
+    return render(
+        request,
+        "department_form.html",
+        {
+            "department": department
+        }
+    )
+
+@login_required
+def department_delete(request, id):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    department = Department.objects.get(id=id)
+
+    if request.method == "POST":
+
+        try:
+
+            department.delete()
+
+        except ProtectedError:
+
+            return render(
+                request,
+                "department_list.html",
+                {
+                    "departments": Department.objects.all(),
+                    "error": "This department cannot be deleted because employees are assigned to it."
+                }
+            )
+
+        return redirect("department_list")
+
+    return render(
+        request,
+        "department_confirm_delete.html",
+        {
+            "department": department
+        }
+    )
+
+@login_required
+def designation_list(request):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    designations = Designation.objects.all().order_by("name")
+
+    return render(
+        request,
+        "designation_list.html",
+        {
+            "designations": designations
+        }
+    )
+
+@login_required
+def designation_create(request):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+
+        if name:
+
+            Designation.objects.create(
+                name=name
+            )
+
+            return redirect("designation_list")
+
+    return render(
+        request,
+        "designation_form.html"
+    )
+
+@login_required
+def designation_update(request, id):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    designation = Designation.objects.get(id=id)
+
+    if request.method == "POST":
+
+        name = request.POST.get("name")
+
+        if name:
+
+            designation.name = name
+            designation.save()
+
+            return redirect("designation_list")
+
+    return render(
+        request,
+        "designation_form.html",
+        {
+            "designation": designation
+        }
+    )
+
+@login_required
+def designation_delete(request, id):
+
+    if Employee.objects.filter(user=request.user).exists():
+        return redirect("employee_dashboard")
+
+    designation = Designation.objects.get(id=id)
+
+    if request.method == "POST":
+
+        try:
+
+            designation.delete()
+
+        except ProtectedError:
+
+            return render(
+                request,
+                "designation_list.html",
+                {
+                    "designations": Designation.objects.all(),
+                    "error": "This designation cannot be deleted because employees are assigned to it."
+                }
+            )
+
+        return redirect("designation_list")
+
+    return render(
+        request,
+        "designation_confirm_delete.html",
+        {
+            "designation": designation
+        }
+    )

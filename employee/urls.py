@@ -29,5 +29,9 @@ path(
     views.my_leaves,
     name="my_leaves"
 ),
-
+path(
+    "payslips/",
+    views.my_payslips,
+    name="my_payslips"
+),
 ]

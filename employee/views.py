@@ -6,7 +6,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
 from django.contrib import messages
 
-from hr.models import Leave
+from hr.models import Leave, Payslip
 
 User = get_user_model()
 
@@ -132,6 +132,25 @@ def my_leaves(request):
         "my_leaves.html",
         {
             "leaves": leaves,
+            "is_employee": True,
+        }
+    )
+
+
+@login_required
+def my_payslips(request):
+
+    employee = request.user.employee
+
+    payslips = Payslip.objects.filter(
+        employee=employee
+    ).order_by("-year", "-month")
+
+    return render(
+        request,
+        "my_payslips.html",
+        {
+            "payslips": payslips,
             "is_employee": True,
         }
     )

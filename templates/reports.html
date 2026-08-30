@@ -1,0 +1,681 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Header -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>HR Reports</h2>
+
+            <p class="text-muted mb-0">
+                Employee, leave and payroll summary
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Filter -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                Select Report Period
+            </h5>
+
+
+            <form method="GET">
+
+                <div class="row align-items-end">
+
+                    <!-- Month -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Month
+                        </label>
+
+                        <select
+                            name="month"
+                            class="form-select"
+                        >
+
+                            <option value="1"
+                                {% if selected_month == 1 %}selected{% endif %}>
+                                January
+                            </option>
+
+                            <option value="2"
+                                {% if selected_month == 2 %}selected{% endif %}>
+                                February
+                            </option>
+
+                            <option value="3"
+                                {% if selected_month == 3 %}selected{% endif %}>
+                                March
+                            </option>
+
+                            <option value="4"
+                                {% if selected_month == 4 %}selected{% endif %}>
+                                April
+                            </option>
+
+                            <option value="5"
+                                {% if selected_month == 5 %}selected{% endif %}>
+                                May
+                            </option>
+
+                            <option value="6"
+                                {% if selected_month == 6 %}selected{% endif %}>
+                                June
+                            </option>
+
+                            <option value="7"
+                                {% if selected_month == 7 %}selected{% endif %}>
+                                July
+                            </option>
+
+                            <option value="8"
+                                {% if selected_month == 8 %}selected{% endif %}>
+                                August
+                            </option>
+
+                            <option value="9"
+                                {% if selected_month == 9 %}selected{% endif %}>
+                                September
+                            </option>
+
+                            <option value="10"
+                                {% if selected_month == 10 %}selected{% endif %}>
+                                October
+                            </option>
+
+                            <option value="11"
+                                {% if selected_month == 11 %}selected{% endif %}>
+                                November
+                            </option>
+
+                            <option value="12"
+                                {% if selected_month == 12 %}selected{% endif %}>
+                                December
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Year -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Year
+                        </label>
+
+                        <input
+                            type="number"
+                            name="year"
+                            class="form-control"
+                            value="{{ selected_year }}"
+                            min="2020"
+                            max="2100"
+                        >
+
+                    </div>
+
+
+                    <!-- Button -->
+
+                    <div class="col-md-4 mb-3">
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary w-100"
+                        >
+
+                            <i class="bi bi-bar-chart"></i>
+
+                            Generate Report
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Report Title -->
+
+    <div class="mb-3">
+
+        <h4>
+
+            Report -
+
+            {% if selected_month == 1 %}January
+            {% elif selected_month == 2 %}February
+            {% elif selected_month == 3 %}March
+            {% elif selected_month == 4 %}April
+            {% elif selected_month == 5 %}May
+            {% elif selected_month == 6 %}June
+            {% elif selected_month == 7 %}July
+            {% elif selected_month == 8 %}August
+            {% elif selected_month == 9 %}September
+            {% elif selected_month == 10 %}October
+            {% elif selected_month == 11 %}November
+            {% elif selected_month == 12 %}December
+            {% endif %}
+
+            {{ selected_year }}
+
+        </h4>
+
+    </div>
+
+
+    <!-- Employee Summary -->
+
+    <h5 class="mb-3">
+        Employee Summary
+    </h5>
+
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        Total Employees
+                    </p>
+
+                    <h2>
+                        {{ total_employees }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        Active Employees
+                    </p>
+
+                    <h2>
+                        {{ active_employees }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted mb-1">
+                        Inactive Employees
+                    </p>
+
+                    <h2>
+                        {{ inactive_employees }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Leave Summary -->
+
+    <h5 class="mb-3">
+        Leave Summary
+    </h5>
+
+
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Total Requests
+                    </p>
+
+                    <h3>
+                        {{ total_leaves }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Pending
+                    </p>
+
+                    <h3>
+                        {{ pending_leaves }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Approved
+                    </p>
+
+                    <h3>
+                        {{ approved_leaves }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Rejected
+                    </p>
+
+                    <h3>
+                        {{ rejected_leaves }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Payroll Summary -->
+
+    <h5 class="mb-3">
+        Payroll Summary
+    </h5>
+
+
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Payslips Generated
+                    </p>
+
+                    <h3>
+                        {{ total_payslips }}
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Basic Salary
+                    </p>
+
+                    <h4>
+                        ₹ {{ total_basic_salary }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Allowances
+                    </p>
+
+                    <h4>
+                        ₹ {{ total_allowances }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3 mb-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Net Payroll
+                    </p>
+
+                    <h4 class="text-success">
+                        ₹ {{ total_net_salary }}
+                    </h4>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Leave Details -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                Leave Details
+            </h5>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Employee
+                            </th>
+
+                            <th>
+                                Leave Type
+                            </th>
+
+                            <th>
+                                Start Date
+                            </th>
+
+                            <th>
+                                End Date
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for leave in leave_details %}
+
+                        <tr>
+
+                            <td>
+                                {{ leave.employee.name }}
+                            </td>
+
+                            <td>
+                                {{ leave.leave_type }}
+                            </td>
+
+                            <td>
+                                {{ leave.start_date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+                                {{ leave.end_date|date:"d M Y" }}
+                            </td>
+
+                            <td>
+
+                                {% if leave.status == "Approved" %}
+
+                                    <span class="badge bg-success">
+                                        Approved
+                                    </span>
+
+                                {% elif leave.status == "Rejected" %}
+
+                                    <span class="badge bg-danger">
+                                        Rejected
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="text-center text-muted"
+                            >
+
+                                No leave records for this month.
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Payroll Details -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">
+                Payroll Details
+            </h5>
+
+
+            <div class="table-responsive">
+
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Employee
+                            </th>
+
+                            <th>
+                                Basic Salary
+                            </th>
+
+                            <th>
+                                Allowances
+                            </th>
+
+                            <th>
+                                Deductions
+                            </th>
+
+                            <th>
+                                Net Salary
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for payslip in payroll_details %}
+
+                        <tr>
+
+                            <td>
+                                {{ payslip.employee.name }}
+                            </td>
+
+                            <td>
+                                ₹ {{ payslip.basic_salary }}
+                            </td>
+
+                            <td>
+                                ₹ {{ payslip.allowances }}
+                            </td>
+
+                            <td>
+                                ₹ {{ payslip.deductions }}
+                            </td>
+
+                            <td>
+
+                                <strong class="text-success">
+                                    ₹ {{ payslip.net_salary }}
+                                </strong>
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td
+                                colspan="5"
+                                class="text-center text-muted"
+                            >
+
+                                No payslips generated for this month.
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

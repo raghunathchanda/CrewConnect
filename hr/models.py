@@ -107,3 +107,53 @@ class LeaveBalance(models.Model):
 
     def __str__(self):
         return f"{self.employee.employee_id} - Leave Balance"
+
+
+class Payslip(models.Model):
+
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="payslips"
+    )
+
+    month = models.PositiveIntegerField()
+
+    year = models.PositiveIntegerField()
+
+    basic_salary = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    allowances = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    deductions = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+
+    net_salary = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    generated_date = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.employee.employee_id} - {self.month}/{self.year}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["employee", "month", "year"],
+                name="unique_employee_payslip"
+            )
+        ]

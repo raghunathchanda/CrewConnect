@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="mb-4">
+
+        <h2>My Payslips</h2>
+
+        <p class="text-muted">
+            View your monthly salary details
+        </p>
+
+    </div>
+
+
+    {% if payslips %}
+
+        <div class="row">
+
+            {% for payslip in payslips %}
+
+                <div class="col-md-6 col-lg-4 mb-4">
+
+                    <div class="card shadow-sm">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between">
+
+                                <div>
+
+                                    <h5>
+                                        {{ payslip.month }}/{{ payslip.year }}
+                                    </h5>
+
+                                    <small class="text-muted">
+                                        Generated:
+                                        {{ payslip.generated_date|date:"d M Y" }}
+                                    </small>
+
+                                </div>
+
+                                <i class="bi bi-file-earmark-text fs-2"></i>
+
+                            </div>
+
+
+                            <hr>
+
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>
+                                    Basic Salary
+                                </span>
+
+                                <strong>
+                                    ₹ {{ payslip.basic_salary }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>
+                                    Allowances
+                                </span>
+
+                                <strong>
+                                    ₹ {{ payslip.allowances }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>
+                                    Deductions
+                                </span>
+
+                                <strong>
+                                    ₹ {{ payslip.deductions }}
+                                </strong>
+
+                            </div>
+
+
+                            <hr>
+
+
+                            <div class="d-flex justify-content-between">
+
+                                <strong>
+                                    Net Salary
+                                </strong>
+
+                                <strong class="text-success">
+                                    ₹ {{ payslip.net_salary }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <i class="bi bi-file-earmark-x fs-1"></i>
+
+                <h5 class="mt-3">
+                    No Payslips Available
+                </h5>
+
+                <p class="text-muted">
+                    Your payslips will appear here once they are generated.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
