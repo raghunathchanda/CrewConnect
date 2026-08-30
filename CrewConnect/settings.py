@@ -132,7 +132,7 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
-EMAIL_HOST_USER = "codebug15@gmail.com"
-EMAIL_HOST_PASSWORD = "uiag mqjh kyej rbab"
+EMAIL_HOST_USER = "give email @gmail.com"
+EMAIL_HOST_PASSWORD = "give app password after creating"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
